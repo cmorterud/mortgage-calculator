@@ -93,8 +93,14 @@ app.innerHTML = `
             <option value="annualAmount">Manual annual amount</option>
           </select>
         </label>
-        ${numberField("propertyTaxPercent", "Property tax percent", "%", "1.25")}
-        ${numberField("propertyTaxAnnualAmount", "Property tax annual amount", "$", "5,000")}
+        ${numberField("propertyTaxPercent", "Property tax percent", "%", "1.25", {
+          visibleWhenField: "propertyTaxMode",
+          visibleWhenValue: "percent",
+        })}
+        ${numberField("propertyTaxAnnualAmount", "Property tax annual amount", "$", "5,000", {
+          visibleWhenField: "propertyTaxMode",
+          visibleWhenValue: "annualAmount",
+        })}
         <label class="field">
           <span>Insurance mode</span>
           <select name="insuranceMode">
@@ -102,8 +108,14 @@ app.innerHTML = `
             <option value="annualAmount">Manual annual amount</option>
           </select>
         </label>
-        ${numberField("insurancePercent", "Insurance percent", "%", "0.35")}
-        ${numberField("insuranceAnnualAmount", "Insurance annual amount", "$", "1,400")}
+        ${numberField("insurancePercent", "Insurance percent", "%", "0.35", {
+          visibleWhenField: "insuranceMode",
+          visibleWhenValue: "percent",
+        })}
+        ${numberField("insuranceAnnualAmount", "Insurance annual amount", "$", "1,400", {
+          visibleWhenField: "insuranceMode",
+          visibleWhenValue: "annualAmount",
+        })}
         <label class="field">
           <span>PMI mode</span>
           <select name="pmiMode">
@@ -163,9 +175,20 @@ document.addEventListener("click", (event) => {
 
 render();
 
-function numberField(name: keyof MortgageInput, label: string, prefix: string, placeholder: string): string {
+function numberField(
+  name: keyof MortgageInput,
+  label: string,
+  prefix: string,
+  placeholder: string,
+  options: { visibleWhenField?: keyof MortgageInput; visibleWhenValue?: string } = {},
+): string {
+  const visibilityAttributes =
+    options.visibleWhenField && options.visibleWhenValue
+      ? ` data-visible-when-field="${options.visibleWhenField}" data-visible-when-value="${options.visibleWhenValue}"`
+      : "";
+
   return `
-    <label class="field" for="${name}">
+    <label class="field" for="${name}"${visibilityAttributes}>
       <span>${label}</span>
       <span class="input-shell">
         <span aria-hidden="true">${prefix}</span>
@@ -227,6 +250,7 @@ function handleFormChange(): void {
 
 function render(): void {
   syncForm();
+  syncConditionalFields();
   const errors = validateInput(state);
   renderErrors(errors);
   renderRateStatus();
@@ -293,6 +317,19 @@ function render(): void {
       </table>
     </div>
   `;
+}
+
+function syncConditionalFields(): void {
+  document.querySelectorAll<HTMLElement>("[data-visible-when-field]").forEach((element) => {
+    const field = element.dataset.visibleWhenField as keyof MortgageInput | undefined;
+    const value = element.dataset.visibleWhenValue;
+
+    if (!field || value === undefined) {
+      return;
+    }
+
+    element.hidden = String(state[field]) !== value;
+  });
 }
 
 function syncForm(): void {
