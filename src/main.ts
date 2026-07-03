@@ -440,11 +440,15 @@ function syncForm(): void {
 
 function getControlDisplayValue(key: keyof MortgageInput, value: unknown): string {
   if (key === "pmiAnnualPercent" && state.pmiMode === "auto" && state.downPaymentPercent >= 20) {
-    return "0";
+    return "";
   }
 
   if (key === "pmiAnnualPercent" && state.pmiMode === "off") {
-    return "0";
+    return "";
+  }
+
+  if ((key === "hoaAmount" || key === "extraMonthlyPrincipal") && value === 0) {
+    return "";
   }
 
   return typeof value === "number" ? cleanNumber(value) : String(value ?? "");
