@@ -45,6 +45,7 @@ export interface MortgageResult {
   totalInterest: number;
   interestSaved: number;
   amortizationRows: AmortizationRow[];
+  baselineYearlySummary: AmortizationSummaryYear[];
   yearlySummary: AmortizationSummaryYear[];
 }
 

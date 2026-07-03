@@ -272,6 +272,7 @@ export function calculateMortgage(input: MortgageInput): MortgageResult {
     totalInterest: accelerated.totalInterest,
     interestSaved: Math.max(0, baseline.totalInterest - accelerated.totalInterest),
     amortizationRows: accelerated.rows,
+    baselineYearlySummary: summarizeAmortizationByYear(baseline.rows),
     yearlySummary: summarizeAmortizationByYear(accelerated.rows),
   };
 }

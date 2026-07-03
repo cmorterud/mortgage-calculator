@@ -3,6 +3,11 @@ import {
   calculateMortgage,
   validateInput,
 } from "./calculations";
+import {
+  destroyAmortizationChart,
+  renderAmortizationChart,
+  type ChartMode,
+} from "./charts";
 import { formatCurrency, formatMonthsAsYearsAndMonths, formatPercent, parseNumberInput } from "./format";
 import { getDefaultInterestRate, getStaticThirtyYearFixedRate } from "./rates";
 import "./styles.css";
@@ -33,6 +38,7 @@ const defaultInput: MortgageInput = {
 
 let rateLookup = getStaticThirtyYearFixedRate();
 let state = loadInput();
+let chartMode: ChartMode = "balance";
 
 const app = document.querySelector<HTMLDivElement>("#app");
 
@@ -143,11 +149,30 @@ app.innerHTML = `
   </form>
 
   <section class="results-panel" id="results" aria-live="polite"></section>
+  <section class="panel" id="chart-section">
+    <div class="section-heading-row">
+      <div>
+        <h2>Amortization chart</h2>
+        <p class="helper chart-helper">Charts are based on the same amortization model as the table.</p>
+      </div>
+      <div class="segmented-control" aria-label="Chart mode">
+        <button class="segment-button active" type="button" data-chart-mode="balance">Balance over time</button>
+        <button class="segment-button" type="button" data-chart-mode="principalInterest">Principal vs interest by year</button>
+      </div>
+    </div>
+    <div id="chart-empty" class="empty-state" hidden>No amortization chart to show yet.</div>
+    <div id="chart-wrap" class="chart-wrap">
+      <canvas id="amortization-chart"></canvas>
+    </div>
+  </section>
   <section class="panel" id="amortization"></section>
 `;
 
 const form = getRequiredElement<HTMLFormElement>("#calculator-form");
 const results = getRequiredElement<HTMLElement>("#results");
+const chartWrap = getRequiredElement<HTMLElement>("#chart-wrap");
+const chartEmpty = getRequiredElement<HTMLElement>("#chart-empty");
+const amortizationChart = getRequiredElement<HTMLCanvasElement>("#amortization-chart");
 const amortization = getRequiredElement<HTMLElement>("#amortization");
 const rateStatus = getRequiredElement<HTMLElement>("#rate-status");
 
@@ -156,11 +181,17 @@ form.addEventListener("change", handleFormChange);
 document.addEventListener("click", (event) => {
   const target = event.target as HTMLElement;
   const action = target.dataset.action;
+  const selectedChartMode = target.dataset.chartMode as ChartMode | undefined;
 
   if (action === "reset") {
     localStorage.removeItem(STORAGE_KEY);
     rateLookup = getStaticThirtyYearFixedRate();
     state = getDefaultInput();
+    render();
+  }
+
+  if (selectedChartMode) {
+    chartMode = selectedChartMode;
     render();
   }
 });
@@ -249,6 +280,7 @@ function render(): void {
   renderRateStatus();
 
   if (errors.length > 0) {
+    renderChart(null);
     results.innerHTML = `
       <h2>Results</h2>
       <div class="empty-state">
@@ -260,6 +292,7 @@ function render(): void {
   }
 
   const result = calculateMortgage(state);
+  renderChart(result);
   results.innerHTML = `
     <h2>Results</h2>
     <div class="headline-results">
@@ -310,6 +343,23 @@ function render(): void {
       </table>
     </div>
   `;
+}
+
+function renderChart(result: ReturnType<typeof calculateMortgage> | null): void {
+  document.querySelectorAll<HTMLButtonElement>("[data-chart-mode]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.chartMode === chartMode);
+  });
+
+  const hasData = Boolean(result?.yearlySummary.length);
+  chartEmpty.hidden = hasData;
+  chartWrap.hidden = !hasData;
+
+  if (!hasData) {
+    destroyAmortizationChart();
+    return;
+  }
+
+  renderAmortizationChart(amortizationChart, chartMode, result);
 }
 
 function syncConditionalFields(): void {

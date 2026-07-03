@@ -264,6 +264,59 @@ select {
   color: #596560;
 }
 
+.section-heading-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.section-heading-row h2 {
+  margin-bottom: 6px;
+}
+
+.chart-helper {
+  margin-bottom: 0;
+}
+
+.segmented-control {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid #c8d1ce;
+  border-radius: 8px;
+  background: #f7faf9;
+}
+
+.segment-button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #4b5b55;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.segment-button.active {
+  background: #173d33;
+  color: #eaf5f1;
+}
+
+.chart-wrap {
+  position: relative;
+  width: 100%;
+  height: clamp(280px, 42vw, 420px);
+  overflow: hidden;
+}
+
+.chart-wrap canvas {
+  max-width: 100%;
+}
+
 .table-wrap {
   overflow-x: auto;
 }
@@ -303,6 +356,17 @@ th {
     grid-template-columns: 1fr;
   }
 
+  .section-heading-row {
+    flex-direction: column;
+  }
+
+  .segmented-control {
+    width: 100%;
+  }
+
+  .segment-button {
+    flex: 1 1 0;
+  }
 }
 
 @media (max-width: 520px) {
@@ -314,6 +378,11 @@ th {
   .panel,
   .results-panel {
     padding: 16px;
+  }
+
+  .segmented-control {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .result-row {
