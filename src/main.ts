@@ -53,7 +53,10 @@ app.innerHTML = `
       <h1>Mortgage calculator</h1>
       <p class="lede">Estimate total monthly housing cost and model how extra principal payments change payoff time.</p>
     </div>
-    <button class="secondary-button" type="button" data-action="reset">Reset</button>
+    <div class="header-actions">
+      <a class="secondary-button" href="https://codymorterud.com">Back to blog</a>
+      <button class="secondary-button" type="button" data-action="reset">Reset</button>
+    </div>
   </header>
 
   <form id="calculator-form" novalidate>

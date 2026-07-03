@@ -37,6 +37,12 @@ select {
   margin-bottom: 24px;
 }
 
+.header-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 10px;
+}
+
 .eyebrow {
   margin: 0 0 8px;
   color: #4d6b63;
@@ -174,6 +180,9 @@ select {
 }
 
 .secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 40px;
   padding: 0 14px;
   border: 1px solid #9db4ad;
@@ -182,6 +191,7 @@ select {
   color: #173d33;
   cursor: pointer;
   font-weight: 700;
+  text-decoration: none;
 }
 
 .secondary-button:hover {
@@ -352,6 +362,10 @@ th {
   .page-header {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .header-actions {
+    flex-wrap: wrap;
   }
 
   .field-grid,
