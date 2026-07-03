@@ -384,6 +384,18 @@ function syncEditableFields(): void {
     readonlyFields.add("downPaymentPercent");
   }
 
+  if (state.propertyTaxMode === "percent") {
+    readonlyFields.add("propertyTaxAnnualAmount");
+  } else {
+    readonlyFields.add("propertyTaxPercent");
+  }
+
+  if (state.insuranceMode === "percent") {
+    readonlyFields.add("insuranceAnnualAmount");
+  } else {
+    readonlyFields.add("insurancePercent");
+  }
+
   if (state.pmiMode !== "manual") {
     readonlyFields.add("pmiAnnualPercent");
   }
