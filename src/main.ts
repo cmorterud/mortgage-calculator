@@ -247,6 +247,10 @@ function handleFormChange(): void {
       continue;
     }
 
+    if (key === "pmiAnnualPercent" && next.pmiMode !== "manual") {
+      continue;
+    }
+
     if (typeof defaultInput[key] === "number") {
       (next[key] as number) = parseNumberInput(String(value));
     } else {
@@ -424,9 +428,21 @@ function syncForm(): void {
   for (const [key, value] of Object.entries(state)) {
     const control = form.elements.namedItem(key);
     if (control instanceof HTMLInputElement || control instanceof HTMLSelectElement) {
-      control.value = typeof value === "number" ? cleanNumber(value) : String(value ?? "");
+      control.value = getControlDisplayValue(key as keyof MortgageInput, value);
     }
   }
+}
+
+function getControlDisplayValue(key: keyof MortgageInput, value: unknown): string {
+  if (key === "pmiAnnualPercent" && state.pmiMode === "auto" && state.downPaymentPercent >= 20) {
+    return "0";
+  }
+
+  if (key === "pmiAnnualPercent" && state.pmiMode === "off") {
+    return "0";
+  }
+
+  return typeof value === "number" ? cleanNumber(value) : String(value ?? "");
 }
 
 function renderErrors(errors: ValidationError[]): void {

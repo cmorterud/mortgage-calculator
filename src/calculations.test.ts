@@ -3,6 +3,7 @@ import {
   calculateDownPayment,
   calculateMortgage,
   calculateMonthlyPrincipalAndInterest,
+  calculatePmiAnnual,
   getMortgageTermYears,
   normalizeHoaToMonthly,
 } from "./calculations";
@@ -82,5 +83,29 @@ describe("mortgage calculations", () => {
 
     expect(result.principalAndInterest).toBeCloseTo(320000 / 180, 2);
     expect(result.payoffMonths).toBe(180);
+  });
+
+  it("returns zero auto PMI when down payment is at least 20%", () => {
+    const input: MortgageInput = {
+      homePrice: 400000,
+      downPaymentMode: "percent",
+      downPaymentPercent: 20,
+      downPaymentAmount: 80000,
+      mortgageType: "30-year-fixed-conventional",
+      manualInterestRate: 6.75,
+      propertyTaxMode: "percent",
+      propertyTaxPercent: 1.25,
+      propertyTaxAnnualAmount: 5000,
+      insuranceMode: "percent",
+      insurancePercent: 0.35,
+      insuranceAnnualAmount: 1400,
+      pmiMode: "auto",
+      pmiAnnualPercent: 0.5,
+      hoaAmount: 0,
+      hoaFrequency: "monthly",
+      extraMonthlyPrincipal: 0,
+    };
+
+    expect(calculatePmiAnnual(input, 320000, 20)).toBe(0);
   });
 });
