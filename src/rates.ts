@@ -12,6 +12,7 @@ interface StaticMortgageRate {
   fetchedAt: string;
 }
 
+
 export function getStaticThirtyYearFixedRate(): RateLookupResult {
   const rateFile = validateStaticMortgageRate(staticMortgageRate);
 
