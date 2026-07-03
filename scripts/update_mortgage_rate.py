@@ -6,7 +6,8 @@ import json
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.request import Request, urlopen
+
+import requests
 
 SOURCE = "FRED MORTGAGE30US"
 SOURCE_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=MORTGAGE30US"
@@ -14,19 +15,21 @@ OUTPUT_PATH = Path("public/rates/mortgage30us.json")
 
 
 def fetch_csv() -> str:
-    request = Request(
-        SOURCE_URL,
-        headers={
-            "Accept": "text/csv",
-            "User-Agent": "mortgage-calculator-rate-updater",
-        },
-    )
+    headers = {
+        "Accept": "text/csv,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "User-Agent": (
+            "Mozilla/5.0 (compatible; mortgage-calculator-rate-updater/1.0; "
+            "+https://github.com/actions)"
+        ),
+    }
 
     for attempt in range(1, 4):
         try:
-            with urlopen(request, timeout=90) as response:
-                return response.read().decode("utf-8")
-        except Exception:
+            response = requests.get(SOURCE_URL, headers=headers, timeout=(10, 90))
+            response.raise_for_status()
+            return response.text
+        except requests.RequestException:
             if attempt == 3:
                 raise
             time.sleep(attempt * 5)
