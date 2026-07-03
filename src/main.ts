@@ -59,8 +59,17 @@ app.innerHTML = `
   <form id="calculator-form" novalidate>
     <section class="panel">
       <h2>Home & Loan</h2>
-      <div class="field-grid">
+      <div class="field-grid loan-field-grid">
         ${numberField("homePrice", "Home price", "$", "400,000")}
+        <label class="field">
+          <span>Mortgage type</span>
+          <select name="mortgageType">
+            <option value="30-year-fixed-conventional">30-year fixed conventional</option>
+          </select>
+        </label>
+        ${numberField("manualInterestRate", "Annual interest rate", "%", String(defaultInput.manualInterestRate))}
+      </div>
+      <div class="field-grid down-payment-grid">
         <label class="field">
           <span>Down payment mode</span>
           <select name="downPaymentMode">
@@ -70,13 +79,6 @@ app.innerHTML = `
         </label>
         ${numberField("downPaymentPercent", "Down payment percent", "%", "20")}
         ${numberField("downPaymentAmount", "Down payment amount", "$", "80,000")}
-        <label class="field">
-          <span>Mortgage type</span>
-          <select name="mortgageType">
-            <option value="30-year-fixed-conventional">30-year fixed conventional</option>
-          </select>
-        </label>
-        ${numberField("manualInterestRate", "Annual interest rate", "%", String(defaultInput.manualInterestRate))}
       </div>
       <p class="helper rate-helper" id="rate-status">Default rate comes from static FRED data updated by GitHub Actions. You can edit it.</p>
     </section>

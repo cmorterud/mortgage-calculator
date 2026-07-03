@@ -91,6 +91,10 @@ h2 {
   gap: 16px;
 }
 
+.down-payment-grid {
+  margin-top: 16px;
+}
+
 .compact-grid {
   grid-template-columns: minmax(0, 1fr);
   max-width: 380px;
