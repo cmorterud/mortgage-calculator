@@ -1,8 +1,7 @@
 import staticMortgageRate from "./data/mortgage30us.json";
-import type { RateLookupResult } from "./types";
+import type { StaticRateResult } from "./types";
 
 const RATE_WARNING = "Could not load the latest national average rate. Enter a rate manually.";
-const MAX_RATE_FILE_AGE_DAYS = 14;
 
 interface StaticMortgageRate {
   source: string;
@@ -13,7 +12,7 @@ interface StaticMortgageRate {
 }
 
 
-export function getStaticThirtyYearFixedRate(): RateLookupResult {
+export function getStaticThirtyYearFixedRate(): StaticRateResult {
   const rateFile = validateStaticMortgageRate(staticMortgageRate);
 
   if (!rateFile) {
@@ -33,15 +32,18 @@ export function getStaticThirtyYearFixedRate(): RateLookupResult {
   };
 }
 
+export function getDefaultInterestRate(fallbackRate: number): number {
+  return getStaticThirtyYearFixedRate().rate ?? fallbackRate;
+}
+
 export function validateStaticMortgageRate(
   value: unknown,
-  now = new Date(),
 ): StaticMortgageRate | null {
   if (!isStaticMortgageRate(value)) {
     return null;
   }
 
-  if (!isIsoDate(value.date) || !isRecentIsoTimestamp(value.fetchedAt, now)) {
+  if (!isIsoDate(value.date) || Number.isNaN(Date.parse(value.fetchedAt))) {
     return null;
   }
 
@@ -68,15 +70,4 @@ function isStaticMortgageRate(value: unknown): value is StaticMortgageRate {
 
 function isIsoDate(value: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
-}
-
-function isRecentIsoTimestamp(value: string, now: Date): boolean {
-  const fetchedAt = Date.parse(value);
-
-  if (Number.isNaN(fetchedAt) || fetchedAt > now.getTime() + 60_000) {
-    return false;
-  }
-
-  const ageMs = now.getTime() - fetchedAt;
-  return ageMs <= MAX_RATE_FILE_AGE_DAYS * 24 * 60 * 60 * 1000;
 }

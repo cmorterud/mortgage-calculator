@@ -1,6 +1,5 @@
 export type MortgageType = "30-year-fixed-conventional";
 export type DownPaymentMode = "percent" | "amount";
-export type RateMode = "manual" | "online";
 export type PropertyTaxMode = "percent" | "annualAmount";
 export type InsuranceMode = "percent" | "annualAmount";
 export type PmiMode = "auto" | "manual" | "off";
@@ -12,9 +11,7 @@ export interface MortgageInput {
   downPaymentPercent: number;
   downPaymentAmount: number;
   mortgageType: MortgageType;
-  rateMode: RateMode;
   manualInterestRate: number;
-  onlineInterestRate: number | null;
   propertyTaxMode: PropertyTaxMode;
   propertyTaxPercent: number;
   propertyTaxAnnualAmount: number;
@@ -74,7 +71,7 @@ export interface ValidationError {
   message: string;
 }
 
-export interface RateLookupResult {
+export interface StaticRateResult {
   rate: number | null;
   source: string;
   asOf: string | null;

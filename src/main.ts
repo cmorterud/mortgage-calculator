@@ -4,11 +4,12 @@ import {
   validateInput,
 } from "./calculations";
 import { formatCurrency, formatMonthsAsYearsAndMonths, formatPercent, parseNumberInput } from "./format";
-import { getStaticThirtyYearFixedRate } from "./rates";
+import { getDefaultInterestRate, getStaticThirtyYearFixedRate } from "./rates";
 import "./styles.css";
 import type { MortgageInput, ValidationError } from "./types";
 
 const STORAGE_KEY = "mortgage-calculator-inputs-v1";
+const FALLBACK_INTEREST_RATE = 6.75;
 
 const defaultInput: MortgageInput = {
   homePrice: 400000,
@@ -16,9 +17,7 @@ const defaultInput: MortgageInput = {
   downPaymentPercent: 20,
   downPaymentAmount: 80000,
   mortgageType: "30-year-fixed-conventional",
-  rateMode: "manual",
-  manualInterestRate: 6.75,
-  onlineInterestRate: null,
+  manualInterestRate: getDefaultInterestRate(FALLBACK_INTEREST_RATE),
   propertyTaxMode: "percent",
   propertyTaxPercent: 1.25,
   propertyTaxAnnualAmount: 5000,
@@ -33,7 +32,7 @@ const defaultInput: MortgageInput = {
 };
 
 let rateLookup = getStaticThirtyYearFixedRate();
-let state = applyStaticRate(loadInput());
+let state = loadInput();
 
 const app = document.querySelector<HTMLDivElement>("#app");
 
@@ -71,16 +70,9 @@ app.innerHTML = `
             <option value="30-year-fixed-conventional">30-year fixed conventional</option>
           </select>
         </label>
-        <label class="field">
-          <span>Rate source</span>
-          <select name="rateMode">
-            <option value="manual">Manual</option>
-            <option value="online">Online national average</option>
-          </select>
-        </label>
-        ${numberField("manualInterestRate", "Annual interest rate", "%", "6.75")}
+        ${numberField("manualInterestRate", "Annual interest rate", "%", String(defaultInput.manualInterestRate))}
       </div>
-      <p class="helper rate-helper" id="rate-status">Online rates use static rate data updated by GitHub Actions.</p>
+      <p class="helper rate-helper" id="rate-status">Default rate comes from static FRED data updated by GitHub Actions. You can edit it.</p>
     </section>
 
     <section class="panel">
@@ -168,7 +160,7 @@ document.addEventListener("click", (event) => {
   if (action === "reset") {
     localStorage.removeItem(STORAGE_KEY);
     rateLookup = getStaticThirtyYearFixedRate();
-    state = applyStaticRate({ ...defaultInput });
+    state = getDefaultInput();
     render();
   }
 });
@@ -243,7 +235,7 @@ function handleFormChange(): void {
     next.insurancePercent = (next.insuranceAnnualAmount / next.homePrice) * 100;
   }
 
-  state = applyStaticRate(next);
+  state = next;
   saveInput(state);
   render();
 }
@@ -342,10 +334,6 @@ function syncEditableFields(): void {
     readonlyFields.add("downPaymentPercent");
   }
 
-  if (state.rateMode === "online") {
-    readonlyFields.add("manualInterestRate");
-  }
-
   if (state.pmiMode !== "manual") {
     readonlyFields.add("pmiAnnualPercent");
   }
@@ -395,12 +383,12 @@ function renderRateStatus(): void {
 
   rateStatus.classList.remove("warning");
 
-  if (state.rateMode === "online" && rateLookup.rate !== null) {
-    rateStatus.textContent = `Using latest available national average 30-year fixed rate from FRED. This is not a personalized lender quote.${rateLookup.asOf ? ` Rate date: ${rateLookup.asOf}.` : ""}`;
+  if (rateLookup.rate !== null) {
+    rateStatus.textContent = `Default rate loaded from FRED national average data${rateLookup.asOf ? ` dated ${rateLookup.asOf}` : ""}. This is not a personalized lender quote.`;
     return;
   }
 
-  rateStatus.textContent = "Online rates use the latest static rate file updated by GitHub Actions.";
+  rateStatus.textContent = "Default rate uses a fallback value because static FRED data is unavailable.";
 }
 
 function metric(label: string, value: string): string {
@@ -433,12 +421,12 @@ function loadInput(): MortgageInput {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (!saved) {
-      return { ...defaultInput };
+      return getDefaultInput();
     }
 
-    return { ...defaultInput, ...(JSON.parse(saved) as Partial<MortgageInput>) };
+    return { ...getDefaultInput(), ...(JSON.parse(saved) as Partial<MortgageInput>) };
   } catch {
-    return { ...defaultInput };
+    return getDefaultInput();
   }
 }
 
@@ -446,22 +434,9 @@ function saveInput(input: MortgageInput): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(input));
 }
 
-function applyStaticRate(input: MortgageInput): MortgageInput {
-  if (input.rateMode !== "online") {
-    return input;
-  }
-
-  if (rateLookup.rate === null) {
-    return {
-      ...input,
-      rateMode: "manual",
-      onlineInterestRate: null,
-    };
-  }
-
+function getDefaultInput(): MortgageInput {
   return {
-    ...input,
-    onlineInterestRate: rateLookup.rate,
-    manualInterestRate: rateLookup.rate,
+    ...defaultInput,
+    manualInterestRate: getDefaultInterestRate(FALLBACK_INTEREST_RATE),
   };
 }

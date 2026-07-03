@@ -10,19 +10,14 @@ const validRateFile = {
 };
 
 describe("static mortgage rate data", () => {
-  it("accepts a fresh valid rate file", () => {
-    expect(validateStaticMortgageRate(validRateFile, new Date("2026-07-03T13:00:00.000Z"))).toEqual(validRateFile);
-  });
-
-  it("rejects stale rate data", () => {
-    expect(validateStaticMortgageRate(validRateFile, new Date("2026-07-20T13:00:00.000Z"))).toBeNull();
+  it("accepts a valid rate file", () => {
+    expect(validateStaticMortgageRate(validRateFile)).toEqual(validRateFile);
   });
 
   it("rejects malformed rate data", () => {
     expect(
       validateStaticMortgageRate(
         { ...validRateFile, rate: "6.43" },
-        new Date("2026-07-03T13:00:00.000Z"),
       ),
     ).toBeNull();
   });

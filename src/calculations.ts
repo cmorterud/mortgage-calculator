@@ -193,8 +193,7 @@ export function validateInput(input: MortgageInput): ValidationError[] {
     errors.push({ field: "downPaymentPercent", message: "Down payment percent cannot be negative." });
   }
 
-  const interestRate = input.rateMode === "online" && input.onlineInterestRate !== null ? input.onlineInterestRate : input.manualInterestRate;
-  if (interestRate < 0 || !Number.isFinite(interestRate)) {
+  if (input.manualInterestRate < 0 || !Number.isFinite(input.manualInterestRate)) {
     errors.push({ field: "manualInterestRate", message: "Interest rate cannot be negative." });
   }
 
@@ -228,8 +227,7 @@ export function calculateMortgage(input: MortgageInput): MortgageResult {
     input.downPaymentMode === "percent" ? input.downPaymentPercent : input.downPaymentAmount,
   );
   const loanAmount = Math.max(0, input.homePrice - downPayment.amount);
-  const interestRate =
-    input.rateMode === "online" && input.onlineInterestRate !== null ? input.onlineInterestRate : input.manualInterestRate;
+  const interestRate = input.manualInterestRate;
   const principalAndInterest = calculateMonthlyPrincipalAndInterest(loanAmount, interestRate);
   const propertyTaxMonthly = calculatePropertyTaxAnnual(input) / 12;
   const insuranceMonthly = calculateInsuranceAnnual(input) / 12;

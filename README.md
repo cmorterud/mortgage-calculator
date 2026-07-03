@@ -44,12 +44,12 @@ Mortgage rate data is refreshed by GitHub Actions instead of being fetched direc
 
 The workflow fetches the FRED `MORTGAGE30US` CSV data, parses the latest valid 30-year fixed national average rate, and writes it to `public/rates/mortgage30us.json` and `src/data/mortgage30us.json`. The app bundles the `src/data` copy at build time, so the page itself does not fetch FRED, Freddie Mac, or rate JSON at runtime.
 
-If the JSON file is missing, invalid, or stale, the app falls back to manual rate entry.
+If the JSON file is missing or invalid, the app falls back to a manual default rate.
 
 ## Assumptions
 
 - Only a 30-year fixed conventional mortgage is modeled.
-- The online mortgage rate, when available, is a rough FRED national average and not a lender quote.
+- The default mortgage rate is a rough FRED national average and not a lender quote.
 - Property taxes are estimates.
 - Home insurance is an estimate and should be replaced with a real quote when evaluating a property.
 - PMI is simplified.
