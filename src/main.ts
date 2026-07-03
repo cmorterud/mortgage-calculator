@@ -251,6 +251,7 @@ function handleFormChange(): void {
 function render(): void {
   syncForm();
   syncConditionalFields();
+  syncEditableFields();
   const errors = validateInput(state);
   renderErrors(errors);
   renderRateStatus();
@@ -330,6 +331,37 @@ function syncConditionalFields(): void {
 
     element.hidden = String(state[field]) !== value;
   });
+}
+
+function syncEditableFields(): void {
+  const readonlyFields = new Set<keyof MortgageInput>();
+
+  if (state.downPaymentMode === "percent") {
+    readonlyFields.add("downPaymentAmount");
+  } else {
+    readonlyFields.add("downPaymentPercent");
+  }
+
+  if (state.rateMode === "online") {
+    readonlyFields.add("manualInterestRate");
+  }
+
+  if (state.pmiMode !== "manual") {
+    readonlyFields.add("pmiAnnualPercent");
+  }
+
+  for (const key of Object.keys(defaultInput) as Array<keyof MortgageInput>) {
+    const control = form.elements.namedItem(key);
+
+    if (!(control instanceof HTMLInputElement)) {
+      continue;
+    }
+
+    const isReadonly = readonlyFields.has(key);
+    control.readOnly = isReadonly;
+    control.setAttribute("aria-readonly", String(isReadonly));
+    control.closest(".field")?.classList.toggle("readonly-field", isReadonly);
+  }
 }
 
 function syncForm(): void {

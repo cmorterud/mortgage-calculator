@@ -125,6 +125,25 @@ h2 {
   box-shadow: 0 0 0 3px rgba(45, 122, 102, 0.16);
 }
 
+.readonly-field .input-shell {
+  border-color: #d6dbd8;
+  background: #eef1ef;
+}
+
+.readonly-field .input-shell:focus-within {
+  border-color: #d6dbd8;
+  box-shadow: none;
+}
+
+.readonly-field input {
+  color: #68726d;
+  cursor: not-allowed;
+}
+
+.readonly-field > span:first-child {
+  color: #68726d;
+}
+
 .input-shell span {
   color: #69736f;
   flex: 0 0 auto;
