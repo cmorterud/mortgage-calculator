@@ -82,7 +82,7 @@ app.innerHTML = `
       </div>
       <div class="inline-actions">
         <button class="secondary-button" type="button" data-action="fetch-rate">Fetch latest national average</button>
-        <p class="helper" id="rate-status">Online rates are rough national averages, not personalized quotes.</p>
+        <p class="helper" id="rate-status">Online rates are loaded from a same-origin static JSON file when available.</p>
       </div>
     </section>
 
@@ -352,11 +352,11 @@ function renderRateStatus(): void {
   rateStatus.classList.remove("warning");
 
   if (rateLookup?.rate !== null && rateLookup?.rate !== undefined) {
-    rateStatus.textContent = `Using ${formatPercent(rateLookup.rate)} from ${rateLookup.source}${rateLookup.asOf ? ` as of ${rateLookup.asOf}` : ""}. This is a national average, not a personalized quote.`;
+    rateStatus.textContent = `Using latest available national average 30-year fixed rate from FRED. This is not a personalized lender quote.${rateLookup.asOf ? ` Rate date: ${rateLookup.asOf}.` : ""}`;
     return;
   }
 
-  rateStatus.textContent = "Online rates are rough national averages, not personalized quotes.";
+  rateStatus.textContent = "Online rates are loaded from a same-origin static JSON file when available.";
 }
 
 function metric(label: string, value: string): string {
