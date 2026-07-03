@@ -4,9 +4,9 @@ import {
   validateInput,
 } from "./calculations";
 import { formatCurrency, formatMonthsAsYearsAndMonths, formatPercent, parseNumberInput } from "./format";
-import { fetchLatestThirtyYearFixedRate } from "./rates";
+import { getStaticThirtyYearFixedRate } from "./rates";
 import "./styles.css";
-import type { MortgageInput, RateLookupResult, ValidationError } from "./types";
+import type { MortgageInput, ValidationError } from "./types";
 
 const STORAGE_KEY = "mortgage-calculator-inputs-v1";
 
@@ -32,8 +32,8 @@ const defaultInput: MortgageInput = {
   extraMonthlyPrincipal: 0,
 };
 
-let state = loadInput();
-let rateLookup: RateLookupResult | null = null;
+let rateLookup = getStaticThirtyYearFixedRate();
+let state = applyStaticRate(loadInput());
 
 const app = document.querySelector<HTMLDivElement>("#app");
 
@@ -80,10 +80,7 @@ app.innerHTML = `
         </label>
         ${numberField("manualInterestRate", "Annual interest rate", "%", "6.75")}
       </div>
-      <div class="inline-actions">
-        <button class="secondary-button" type="button" data-action="fetch-rate">Fetch latest national average</button>
-        <p class="helper" id="rate-status">Online rates are loaded from a same-origin static JSON file when available.</p>
-      </div>
+      <p class="helper rate-helper" id="rate-status">Online rates use static rate data updated by GitHub Actions.</p>
     </section>
 
     <section class="panel">
@@ -158,13 +155,9 @@ document.addEventListener("click", (event) => {
 
   if (action === "reset") {
     localStorage.removeItem(STORAGE_KEY);
-    state = { ...defaultInput };
-    rateLookup = null;
+    rateLookup = getStaticThirtyYearFixedRate();
+    state = applyStaticRate({ ...defaultInput });
     render();
-  }
-
-  if (action === "fetch-rate") {
-    void updateOnlineRate();
   }
 });
 
@@ -227,26 +220,8 @@ function handleFormChange(): void {
     next.insurancePercent = (next.insuranceAnnualAmount / next.homePrice) * 100;
   }
 
-  state = next;
+  state = applyStaticRate(next);
   saveInput(state);
-  render();
-}
-
-async function updateOnlineRate(): Promise<void> {
-  rateStatus.textContent = "Fetching the latest national average rate...";
-  const lookup = await fetchLatestThirtyYearFixedRate();
-  rateLookup = lookup;
-
-  if (lookup.rate !== null) {
-    state = {
-      ...state,
-      rateMode: "online",
-      onlineInterestRate: lookup.rate,
-      manualInterestRate: lookup.rate,
-    };
-    saveInput(state);
-  }
-
   render();
 }
 
@@ -343,7 +318,7 @@ function renderErrors(errors: ValidationError[]): void {
 }
 
 function renderRateStatus(): void {
-  if (rateLookup?.warning) {
+  if (rateLookup.warning) {
     rateStatus.textContent = rateLookup.warning;
     rateStatus.classList.add("warning");
     return;
@@ -351,12 +326,12 @@ function renderRateStatus(): void {
 
   rateStatus.classList.remove("warning");
 
-  if (rateLookup?.rate !== null && rateLookup?.rate !== undefined) {
+  if (state.rateMode === "online" && rateLookup.rate !== null) {
     rateStatus.textContent = `Using latest available national average 30-year fixed rate from FRED. This is not a personalized lender quote.${rateLookup.asOf ? ` Rate date: ${rateLookup.asOf}.` : ""}`;
     return;
   }
 
-  rateStatus.textContent = "Online rates are loaded from a same-origin static JSON file when available.";
+  rateStatus.textContent = "Online rates use the latest static rate file updated by GitHub Actions.";
 }
 
 function metric(label: string, value: string): string {
@@ -400,4 +375,24 @@ function loadInput(): MortgageInput {
 
 function saveInput(input: MortgageInput): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(input));
+}
+
+function applyStaticRate(input: MortgageInput): MortgageInput {
+  if (input.rateMode !== "online") {
+    return input;
+  }
+
+  if (rateLookup.rate === null) {
+    return {
+      ...input,
+      rateMode: "manual",
+      onlineInterestRate: null,
+    };
+  }
+
+  return {
+    ...input,
+    onlineInterestRate: rateLookup.rate,
+    manualInterestRate: rateLookup.rate,
+  };
 }

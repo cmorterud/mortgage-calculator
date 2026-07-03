@@ -1,7 +1,7 @@
+import staticMortgageRate from "./data/mortgage30us.json";
 import type { RateLookupResult } from "./types";
 
 const RATE_WARNING = "Could not load the latest national average rate. Enter a rate manually.";
-const RATE_JSON_PATH = "rates/mortgage30us.json";
 const MAX_RATE_FILE_AGE_DAYS = 14;
 
 interface StaticMortgageRate {
@@ -12,29 +12,10 @@ interface StaticMortgageRate {
   fetchedAt: string;
 }
 
-export async function fetchLatestThirtyYearFixedRate(): Promise<RateLookupResult> {
-  try {
-    const response = await fetch(`${import.meta.env.BASE_URL}${RATE_JSON_PATH}`, {
-      headers: { Accept: "application/json" },
-    });
+export function getStaticThirtyYearFixedRate(): RateLookupResult {
+  const rateFile = validateStaticMortgageRate(staticMortgageRate);
 
-    if (!response.ok) {
-      throw new Error(`Rate JSON request failed with ${response.status}`);
-    }
-
-    const rateFile = validateStaticMortgageRate(await response.json());
-
-    if (!rateFile) {
-      throw new Error("Rate JSON was missing, invalid, or stale");
-    }
-
-    return {
-      rate: rateFile.rate,
-      source: rateFile.source,
-      asOf: rateFile.date,
-      warning: null,
-    };
-  } catch {
+  if (!rateFile) {
     return {
       rate: null,
       source: "FRED MORTGAGE30US",
@@ -42,6 +23,13 @@ export async function fetchLatestThirtyYearFixedRate(): Promise<RateLookupResult
       warning: RATE_WARNING,
     };
   }
+
+  return {
+    rate: rateFile.rate,
+    source: rateFile.source,
+    asOf: rateFile.date,
+    warning: null,
+  };
 }
 
 export function validateStaticMortgageRate(

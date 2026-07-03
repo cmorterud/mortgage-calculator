@@ -165,18 +165,15 @@ select {
   background: #edf6f3;
 }
 
-.inline-actions {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-top: 16px;
-}
-
 .helper,
 .error {
   color: #62706b;
   font-size: 0.88rem;
   line-height: 1.45;
+}
+
+.rate-helper {
+  margin: 16px 0 0;
 }
 
 .helper-list {
@@ -287,10 +284,6 @@ th {
     grid-template-columns: 1fr;
   }
 
-  .inline-actions {
-    align-items: stretch;
-    flex-direction: column;
-  }
 }
 
 @media (max-width: 520px) {

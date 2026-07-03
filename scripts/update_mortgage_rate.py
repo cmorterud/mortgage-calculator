@@ -12,6 +12,7 @@ import requests
 SOURCE = "FRED MORTGAGE30US"
 SOURCE_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=MORTGAGE30US"
 OUTPUT_PATH = Path("public/rates/mortgage30us.json")
+APP_DATA_PATH = Path("src/data/mortgage30us.json")
 
 
 def fetch_csv() -> str:
@@ -61,6 +62,7 @@ def latest_rate(csv_text: str) -> tuple[str, float]:
 def main() -> None:
     date, rate = latest_rate(fetch_csv())
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    APP_DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         "source": SOURCE,
         "sourceUrl": SOURCE_URL,
@@ -68,9 +70,11 @@ def main() -> None:
         "rate": rate,
         "fetchedAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
     }
+    json_text = f"{json.dumps(payload, indent=2)}\n"
 
-    OUTPUT_PATH.write_text(f"{json.dumps(payload, indent=2)}\n", encoding="utf-8")
-    print(f"Wrote {OUTPUT_PATH} with {SOURCE} {rate} from {date}")
+    OUTPUT_PATH.write_text(json_text, encoding="utf-8")
+    APP_DATA_PATH.write_text(json_text, encoding="utf-8")
+    print(f"Wrote {OUTPUT_PATH} and {APP_DATA_PATH} with {SOURCE} {rate} from {date}")
 
 
 if __name__ == "__main__":

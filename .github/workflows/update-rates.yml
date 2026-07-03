@@ -24,13 +24,14 @@ jobs:
         run: python scripts/update_mortgage_rate.py
       - name: Commit updated rate file
         run: |
-          if [ -z "$(git status --porcelain -- public/rates/mortgage30us.json)" ]; then
-            echo "Mortgage rate file is unchanged."
+          if [ -z "$(git status --porcelain -- public/rates/mortgage30us.json src/data/mortgage30us.json)" ]; then
+            echo "Mortgage rate files are unchanged."
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add public/rates/mortgage30us.json
+          git add src/data/mortgage30us.json
           git commit -m "Update mortgage rate data"
           git push

@@ -42,7 +42,7 @@ You can also build locally with `npm run build` and deploy the generated `dist` 
 
 Mortgage rate data is refreshed by GitHub Actions instead of being fetched directly by the browser. The `Update mortgage rates` workflow runs once per day and can also be started manually from the GitHub Actions tab with `Run workflow`.
 
-The workflow fetches the FRED `MORTGAGE30US` CSV data, parses the latest valid 30-year fixed national average rate, and writes it to `public/rates/mortgage30us.json`. The browser reads that same-origin static JSON file from GitHub Pages, which avoids FRED/Freddie Mac browser CORS issues.
+The workflow fetches the FRED `MORTGAGE30US` CSV data, parses the latest valid 30-year fixed national average rate, and writes it to `public/rates/mortgage30us.json` and `src/data/mortgage30us.json`. The app bundles the `src/data` copy at build time, so the page itself does not fetch FRED, Freddie Mac, or rate JSON at runtime.
 
 If the JSON file is missing, invalid, or stale, the app falls back to manual rate entry.
 
