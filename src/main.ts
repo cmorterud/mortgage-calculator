@@ -427,6 +427,11 @@ function syncEditableFields(): void {
 function syncForm(): void {
   for (const [key, value] of Object.entries(state)) {
     const control = form.elements.namedItem(key);
+
+    if (control instanceof HTMLInputElement && document.activeElement === control) {
+      continue;
+    }
+
     if (control instanceof HTMLInputElement || control instanceof HTMLSelectElement) {
       control.value = getControlDisplayValue(key as keyof MortgageInput, value);
     }
