@@ -65,6 +65,7 @@ app.innerHTML = `
           <span>Mortgage type</span>
           <select name="mortgageType">
             <option value="30-year-fixed-conventional">30-year fixed conventional</option>
+            <option value="15-year-fixed-conventional">15-year fixed conventional</option>
           </select>
         </label>
         ${numberField("manualInterestRate", "Annual interest rate", "%", String(defaultInput.manualInterestRate))}

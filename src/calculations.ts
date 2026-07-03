@@ -3,13 +3,22 @@ import type {
   AmortizationSummaryYear,
   HoaFrequency,
   MortgageInput,
+  MortgageType,
   MortgageResult,
   ValidationError,
 } from "./types";
 
-const TERM_YEARS = 30;
-const NUMBER_OF_PAYMENTS = TERM_YEARS * 12;
+const DEFAULT_TERM_YEARS = 30;
+const DEFAULT_NUMBER_OF_PAYMENTS = DEFAULT_TERM_YEARS * 12;
 const AUTO_PMI_ANNUAL_PERCENT = 0.5;
+
+export function getMortgageTermYears(mortgageType: MortgageType): number {
+  if (mortgageType === "15-year-fixed-conventional") {
+    return 15;
+  }
+
+  return 30;
+}
 
 export function calculateDownPayment(
   homePrice: number,
@@ -34,7 +43,7 @@ export function calculateDownPayment(
 export function calculateMonthlyPrincipalAndInterest(
   loanAmount: number,
   annualInterestRate: number,
-  numberOfPayments = NUMBER_OF_PAYMENTS,
+  numberOfPayments = DEFAULT_NUMBER_OF_PAYMENTS,
 ): number {
   if (loanAmount <= 0) {
     return 0;
@@ -228,7 +237,8 @@ export function calculateMortgage(input: MortgageInput): MortgageResult {
   );
   const loanAmount = Math.max(0, input.homePrice - downPayment.amount);
   const interestRate = input.manualInterestRate;
-  const principalAndInterest = calculateMonthlyPrincipalAndInterest(loanAmount, interestRate);
+  const termYears = getMortgageTermYears(input.mortgageType);
+  const principalAndInterest = calculateMonthlyPrincipalAndInterest(loanAmount, interestRate, termYears * 12);
   const propertyTaxMonthly = calculatePropertyTaxAnnual(input) / 12;
   const insuranceMonthly = calculateInsuranceAnnual(input) / 12;
   const pmiMonthly = calculatePmiAnnual(input, loanAmount, downPayment.percent) / 12;
@@ -240,14 +250,14 @@ export function calculateMortgage(input: MortgageInput): MortgageResult {
   const baseline = amortizeLoan({
     loanAmount,
     annualInterestRate: interestRate,
-    termYears: TERM_YEARS,
+    termYears,
     scheduledMonthlyPayment: principalAndInterest,
     extraMonthlyPrincipal: 0,
   });
   const accelerated = amortizeLoan({
     loanAmount,
     annualInterestRate: interestRate,
-    termYears: TERM_YEARS,
+    termYears,
     scheduledMonthlyPayment: principalAndInterest,
     extraMonthlyPrincipal: input.extraMonthlyPrincipal,
   });

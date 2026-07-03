@@ -1,4 +1,4 @@
-export type MortgageType = "30-year-fixed-conventional";
+export type MortgageType = "30-year-fixed-conventional" | "15-year-fixed-conventional";
 export type DownPaymentMode = "percent" | "amount";
 export type PropertyTaxMode = "percent" | "annualAmount";
 export type InsuranceMode = "percent" | "annualAmount";

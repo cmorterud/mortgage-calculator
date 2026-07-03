@@ -48,7 +48,7 @@ If the JSON file is missing or invalid, the app falls back to a manual default r
 
 ## Assumptions
 
-- Only a 30-year fixed conventional mortgage is modeled.
+- Only 15-year and 30-year fixed conventional mortgages are modeled.
 - The default mortgage rate is a rough FRED national average and not a lender quote.
 - Property taxes are estimates.
 - Home insurance is an estimate and should be replaced with a real quote when evaluating a property.
