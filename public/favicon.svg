@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#0f172a"/>
+  <path
+    d="M18 32L32 18L46 32V48C46 49.1 45.1 50 44 50H20C18.9 50 18 49.1 18 48V32Z"
+    fill="#e2e8f0"
+  />
+  <path
+    d="M25 50V36H39V50"
+    fill="#0f172a"
+  />
+  <path
+    d="M14 33L32 15L50 33"
+    fill="none"
+    stroke="#38bdf8"
+    stroke-width="5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <text
+    x="32"
+    y="31"
+    text-anchor="middle"
+    font-family="Arial, sans-serif"
+    font-size="16"
+    font-weight="700"
+    fill="#0f172a"
+  >$</text>
+</svg>
