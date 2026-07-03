@@ -22,7 +22,7 @@ jobs:
         run: python scripts/update_mortgage_rate.py
       - name: Commit updated rate file
         run: |
-          if git diff --quiet -- public/rates/mortgage30us.json; then
+          if [ -z "$(git status --porcelain -- public/rates/mortgage30us.json)" ]; then
             echo "Mortgage rate file is unchanged."
             exit 0
           fi

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import csv
 import json
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.request import Request, urlopen
@@ -13,9 +14,24 @@ OUTPUT_PATH = Path("public/rates/mortgage30us.json")
 
 
 def fetch_csv() -> str:
-    request = Request(SOURCE_URL, headers={"User-Agent": "mortgage-calculator-rate-updater"})
-    with urlopen(request, timeout=30) as response:
-        return response.read().decode("utf-8")
+    request = Request(
+        SOURCE_URL,
+        headers={
+            "Accept": "text/csv",
+            "User-Agent": "mortgage-calculator-rate-updater",
+        },
+    )
+
+    for attempt in range(1, 4):
+        try:
+            with urlopen(request, timeout=90) as response:
+                return response.read().decode("utf-8")
+        except Exception:
+            if attempt == 3:
+                raise
+            time.sleep(attempt * 5)
+
+    raise RuntimeError("Failed to fetch FRED CSV")
 
 
 def latest_rate(csv_text: str) -> tuple[str, float]:
