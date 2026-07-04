@@ -78,3 +78,31 @@ export interface StaticRateResult {
   asOf: string | null;
   warning: string | null;
 }
+
+export interface Scenario {
+  id: string;
+  name: string;
+  input: MortgageInput;
+  result?: MortgageResult;
+  validationErrors: ValidationError[];
+}
+
+export type ScenarioComparisonFormat = "currency" | "percent" | "months" | "number" | "text";
+
+export interface ScenarioComparisonMetric {
+  id: string;
+  label: string;
+  format: ScenarioComparisonFormat;
+  lowerIsBetter?: boolean;
+  higherIsBetter?: boolean;
+}
+
+export interface ScenarioComparisonRow extends ScenarioComparisonMetric {
+  getValue: (scenario: Scenario) => number | string | null;
+  requiresValidResult?: boolean;
+}
+
+export interface AppState {
+  scenarios: Scenario[];
+  activeScenarioId: string;
+}
