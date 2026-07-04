@@ -215,11 +215,6 @@ select {
   background: #edf6f3;
 }
 
-.secondary-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
 .helper,
 .error {
   color: #62706b;
