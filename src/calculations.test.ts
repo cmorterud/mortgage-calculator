@@ -108,4 +108,39 @@ describe("mortgage calculations", () => {
 
     expect(calculatePmiAnnual(input, 320000, 20)).toBe(0);
   });
+
+  it("matches a known 30-year example with taxes, insurance, and annual other costs", () => {
+    const input: MortgageInput = {
+      homePrice: 400000,
+      downPaymentMode: "percent",
+      downPaymentPercent: 20,
+      downPaymentAmount: 80000,
+      mortgageType: "30-year-fixed-conventional",
+      manualInterestRate: 6.538,
+      propertyTaxMode: "percent",
+      propertyTaxPercent: 1.2,
+      propertyTaxAnnualAmount: 4800,
+      insuranceMode: "annualAmount",
+      insurancePercent: 0.375,
+      insuranceAnnualAmount: 1500,
+      pmiMode: "off",
+      pmiAnnualPercent: 0.5,
+      hoaAmount: 4000,
+      hoaFrequency: "annually",
+      extraMonthlyPrincipal: 0,
+    };
+
+    const result = calculateMortgage(input);
+
+    expect(result.loanAmount).toBe(320000);
+    expect(result.downPaymentAmount).toBe(80000);
+    expect(result.principalAndInterest).toBeCloseTo(2030.62, 2);
+    expect(result.propertyTaxMonthly).toBeCloseTo(400, 2);
+    expect(result.insuranceMonthly).toBeCloseTo(125, 2);
+    expect(result.pmiMonthly).toBe(0);
+    expect(result.hoaMonthly).toBeCloseTo(333.33, 2);
+    expect(result.totalMonthlyHousingCost).toBeCloseTo(2888.95, 2);
+    expect(result.payoffMonths).toBe(360);
+    expect(result.totalInterest).toBeCloseTo(411023.68, 2);
+  });
 });
