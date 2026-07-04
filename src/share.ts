@@ -1,61 +1,41 @@
-import type { AppState, MortgageInput } from "./types";
+import type { MortgageInput } from "./types";
 
 export const SHARE_PARAM = "view";
 
-interface SharedAppState {
+interface SharedMortgageInput {
   version: 1;
-  activeScenarioId: string;
-  scenarios: Array<{
-    id: string;
-    name: string;
-    input: unknown;
-  }>;
+  input: Partial<MortgageInput>;
 }
 
-export function encodeShareState(appState: AppState): string {
-  const sharedState: SharedAppState = {
+export function encodeShareState(input: MortgageInput): string {
+  const sharedState: SharedMortgageInput = {
     version: 1,
-    activeScenarioId: appState.activeScenarioId,
-    scenarios: appState.scenarios.map((scenario) => ({
-      id: scenario.id,
-      name: scenario.name,
-      input: scenario.input,
-    })),
+    input,
   };
 
   return JSON.stringify(sharedState);
 }
 
-export function decodeShareState(value: string | null): Partial<AppState> | null {
+export function decodeShareState(value: string | null): Partial<MortgageInput> | null {
   if (!value) {
     return null;
   }
 
   try {
-    const parsed = JSON.parse(value) as Partial<SharedAppState>;
+    const parsed = JSON.parse(value) as Partial<SharedMortgageInput>;
 
-    if (parsed.version !== 1 || !Array.isArray(parsed.scenarios)) {
+    if (parsed.version !== 1 || typeof parsed.input !== "object" || parsed.input === null) {
       return null;
     }
 
-    const scenarios = parsed.scenarios.map((scenario) => ({
-      id: scenario.id,
-      name: scenario.name,
-      input: scenario.input as Partial<MortgageInput>,
-      validationErrors: [],
-    })) as AppState["scenarios"];
-
-    return {
-      activeScenarioId: typeof parsed.activeScenarioId === "string" ? parsed.activeScenarioId : undefined,
-      scenarios,
-    };
+    return parsed.input;
   } catch {
     return null;
   }
 }
 
-export function buildShareUrl(appState: AppState, href = window.location.href): string {
+export function buildShareUrl(input: MortgageInput, href = window.location.href): string {
   const url = new URL(href);
-  url.searchParams.set(SHARE_PARAM, encodeShareState(appState));
+  url.searchParams.set(SHARE_PARAM, encodeShareState(input));
   return url.toString();
 }
