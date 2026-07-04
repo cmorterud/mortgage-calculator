@@ -76,6 +76,7 @@ export interface StaticRateResult {
   rate: number | null;
   source: string;
   asOf: string | null;
+  fetchedAt: string | null;
   warning: string | null;
 }
 

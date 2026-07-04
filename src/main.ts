@@ -925,11 +925,28 @@ function renderRateStatus(): void {
   rateStatus.classList.remove("warning");
 
   if (rateLookup.rate !== null) {
-    rateStatus.textContent = `Default rate loaded from FRED national average data${rateLookup.asOf ? ` dated ${rateLookup.asOf}` : ""}. This is not a personalized lender quote.`;
+    const observationDate = rateLookup.asOf ? `Observation date: ${rateLookup.asOf}. ` : "";
+    const refreshedAt = rateLookup.fetchedAt ? `Static data refreshed: ${formatRateRefreshDate(rateLookup.fetchedAt)}. ` : "";
+    rateStatus.textContent = `${observationDate}${refreshedAt}Using latest available national average 30-year fixed rate from FRED. This is not a personalized lender quote.`;
     return;
   }
 
   rateStatus.textContent = "Default rate uses a fallback value because static FRED data is unavailable.";
+}
+
+function formatRateRefreshDate(value: string): string {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "UTC",
+    timeZoneName: "short",
+  }).format(date);
 }
 
 function metric(label: string, value: string): string {
