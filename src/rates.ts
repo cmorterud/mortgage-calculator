@@ -20,7 +20,6 @@ export function getStaticThirtyYearFixedRate(): StaticRateResult {
       rate: null,
       source: "FRED MORTGAGE30US",
       asOf: null,
-      fetchedAt: null,
       warning: RATE_WARNING,
     };
   }
@@ -29,7 +28,6 @@ export function getStaticThirtyYearFixedRate(): StaticRateResult {
     rate: rateFile.rate,
     source: rateFile.source,
     asOf: rateFile.date,
-    fetchedAt: rateFile.fetchedAt,
     warning: null,
   };
 }

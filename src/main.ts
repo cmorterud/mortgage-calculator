@@ -10,12 +10,10 @@ import {
 } from "./charts";
 import { formatCurrency, formatMonthsAsYearsAndMonths, formatPercent, parseNumberInput } from "./format";
 import { getDefaultInterestRate, getStaticThirtyYearFixedRate } from "./rates";
-import { buildShareUrl, decodeShareState, SHARE_PARAM } from "./share";
 import "./styles.css";
 import type { MortgageInput, ValidationError } from "./types";
 
-const STORAGE_KEY = "mortgage-calculator-inputs-v3";
-const OLD_STORAGE_KEY = "mortgage-calculator-inputs-v1";
+const STORAGE_KEY = "mortgage-calculator-inputs-v1";
 const FALLBACK_INTEREST_RATE = 6.75;
 
 const defaultInput: MortgageInput = {
@@ -39,7 +37,7 @@ const defaultInput: MortgageInput = {
 };
 
 let rateLookup = getStaticThirtyYearFixedRate();
-let state = loadInputState();
+let state = loadInput();
 let chartMode: ChartMode = "balance";
 
 const app = document.querySelector<HTMLDivElement>("#app");
@@ -55,13 +53,9 @@ app.innerHTML = `
       <h1>Mortgage calculator</h1>
       <p class="lede">Estimate total monthly housing cost and model how extra principal payments change payoff time.</p>
     </div>
-    <div class="header-controls">
-      <div class="header-actions">
-        <a class="secondary-button" href="https://codymorterud.com">Back to blog</a>
-        <button class="secondary-button" type="button" data-action="share">Share view</button>
-        <button class="secondary-button" type="button" data-action="reset">Reset</button>
-      </div>
-      <p class="share-status" id="share-status" aria-live="polite"></p>
+    <div class="header-actions">
+      <a class="secondary-button" href="https://codymorterud.com">Back to blog</a>
+      <button class="secondary-button" type="button" data-action="reset">Reset</button>
     </div>
   </header>
 
@@ -187,32 +181,19 @@ const chartEmpty = getRequiredElement<HTMLElement>("#chart-empty");
 const amortizationChart = getRequiredElement<HTMLCanvasElement>("#amortization-chart");
 const amortization = getRequiredElement<HTMLElement>("#amortization");
 const rateStatus = getRequiredElement<HTMLElement>("#rate-status");
-const shareStatus = getRequiredElement<HTMLElement>("#share-status");
 
 form.addEventListener("input", handleFormChange);
 form.addEventListener("change", handleFormChange);
 document.addEventListener("click", (event) => {
-  const target = (event.target as HTMLElement).closest<HTMLElement>("[data-action], [data-chart-mode]");
-
-  if (!target) {
-    return;
-  }
-
+  const target = event.target as HTMLElement;
   const action = target.dataset.action;
   const selectedChartMode = target.dataset.chartMode as ChartMode | undefined;
 
   if (action === "reset") {
     localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(OLD_STORAGE_KEY);
-    clearShareParam();
     rateLookup = getStaticThirtyYearFixedRate();
     state = getDefaultInput();
-    shareStatus.textContent = "";
     render();
-  }
-
-  if (action === "share") {
-    void shareCurrentView();
   }
 
   if (selectedChartMode) {
@@ -296,7 +277,7 @@ function handleFormChange(): void {
   }
 
   state = next;
-  saveInputState();
+  saveInput(state);
   render();
 }
 
@@ -304,11 +285,9 @@ function render(): void {
   syncForm();
   syncConditionalFields();
   syncEditableFields();
-  renderErrors([]);
-  renderRateStatus();
-
   const errors = validateInput(state);
   renderErrors(errors);
+  renderRateStatus();
 
   if (errors.length > 0) {
     renderChart(null);
@@ -498,28 +477,11 @@ function renderRateStatus(): void {
   rateStatus.classList.remove("warning");
 
   if (rateLookup.rate !== null) {
-    const observationDate = rateLookup.asOf ? `Observation date: ${rateLookup.asOf}. ` : "";
-    const refreshedAt = rateLookup.fetchedAt ? `Static data refreshed: ${formatRateRefreshDate(rateLookup.fetchedAt)}. ` : "";
-    rateStatus.textContent = `${observationDate}${refreshedAt}Using latest available national average 30-year fixed rate from FRED. This is not a personalized lender quote.`;
+    rateStatus.textContent = `Default rate loaded from FRED national average data${rateLookup.asOf ? ` dated ${rateLookup.asOf}` : ""}. This is not a personalized lender quote.`;
     return;
   }
 
   rateStatus.textContent = "Default rate uses a fallback value because static FRED data is unavailable.";
-}
-
-function formatRateRefreshDate(value: string): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "UTC",
-    timeZoneName: "short",
-  }).format(date);
 }
 
 function metric(label: string, value: string): string {
@@ -548,60 +510,21 @@ function cleanNumber(value: number): string {
   return String(Math.round(value * 100) / 100);
 }
 
-function loadInputState(): MortgageInput {
+function loadInput(): MortgageInput {
   try {
-    const sharedState = decodeShareState(new URLSearchParams(window.location.search).get(SHARE_PARAM));
-    if (sharedState) {
-      return normalizeInput(sharedState);
-    }
-
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      return normalizeInput(JSON.parse(saved) as Partial<MortgageInput>);
+    if (!saved) {
+      return getDefaultInput();
     }
 
-    const oldInput = localStorage.getItem(OLD_STORAGE_KEY);
-    if (oldInput) {
-      return normalizeInput(JSON.parse(oldInput) as Partial<MortgageInput>);
-    }
-
-    return getDefaultInput();
+    return { ...getDefaultInput(), ...(JSON.parse(saved) as Partial<MortgageInput>) };
   } catch {
     return getDefaultInput();
   }
 }
 
-function normalizeInput(input: Partial<MortgageInput>): MortgageInput {
-  return {
-    ...getDefaultInput(),
-    ...(typeof input === "object" && input !== null ? input : {}),
-  };
-}
-
-function saveInputState(): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
-
-async function shareCurrentView(): Promise<void> {
-  const shareUrl = buildShareUrl(state);
-
-  try {
-    await navigator.clipboard.writeText(shareUrl);
-    shareStatus.textContent = "Share link copied.";
-  } catch {
-    shareStatus.textContent = shareUrl;
-  }
-}
-
-function clearShareParam(): void {
-  const url = new URL(window.location.href);
-
-  if (!url.searchParams.has(SHARE_PARAM)) {
-    return;
-  }
-
-  url.searchParams.delete(SHARE_PARAM);
-  window.history.replaceState(null, "", url.toString());
+function saveInput(input: MortgageInput): void {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(input));
 }
 
 function getDefaultInput(): MortgageInput {
