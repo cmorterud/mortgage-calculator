@@ -43,6 +43,23 @@ select {
   gap: 10px;
 }
 
+.header-controls {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.share-status {
+  max-width: 420px;
+  margin: 0;
+  color: #4d6b63;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
 .eyebrow {
   margin: 0 0 8px;
   color: #4d6b63;
@@ -454,6 +471,14 @@ th {
 
   .header-actions {
     flex-wrap: wrap;
+  }
+
+  .header-controls {
+    align-items: flex-start;
+  }
+
+  .share-status {
+    text-align: left;
   }
 
   .field-grid,

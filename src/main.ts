@@ -10,6 +10,7 @@ import {
 } from "./charts";
 import { formatCurrency, formatMonthsAsYearsAndMonths, formatPercent, parseNumberInput } from "./format";
 import { getDefaultInterestRate, getStaticThirtyYearFixedRate } from "./rates";
+import { buildShareUrl, decodeShareState, SHARE_PARAM } from "./share";
 import "./styles.css";
 import type {
   AppState,
@@ -199,9 +200,13 @@ app.innerHTML = `
       <h1>Mortgage calculator</h1>
       <p class="lede">Estimate total monthly housing cost and model how extra principal payments change payoff time.</p>
     </div>
-    <div class="header-actions">
-      <a class="secondary-button" href="https://codymorterud.com">Back to blog</a>
-      <button class="secondary-button" type="button" data-action="reset">Reset</button>
+    <div class="header-controls">
+      <div class="header-actions">
+        <a class="secondary-button" href="https://codymorterud.com">Back to blog</a>
+        <button class="secondary-button" type="button" data-action="share">Share view</button>
+        <button class="secondary-button" type="button" data-action="reset">Reset</button>
+      </div>
+      <p class="share-status" id="share-status" aria-live="polite"></p>
     </div>
   </header>
 
@@ -346,6 +351,7 @@ const chartEmpty = getRequiredElement<HTMLElement>("#chart-empty");
 const amortizationChart = getRequiredElement<HTMLCanvasElement>("#amortization-chart");
 const amortization = getRequiredElement<HTMLElement>("#amortization");
 const rateStatus = getRequiredElement<HTMLElement>("#rate-status");
+const shareStatus = getRequiredElement<HTMLElement>("#share-status");
 
 form.addEventListener("input", handleFormChange);
 form.addEventListener("change", handleFormChange);
@@ -363,10 +369,15 @@ document.addEventListener("click", (event) => {
   if (action === "reset") {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(OLD_STORAGE_KEY);
+    clearShareParam();
     rateLookup = getStaticThirtyYearFixedRate();
     appState = createDefaultAppState();
     state = getActiveScenario().input;
     render();
+  }
+
+  if (action === "share") {
+    void shareCurrentView();
   }
 
   if (action === "select-scenario" && scenarioId) {
@@ -994,6 +1005,11 @@ function cleanNumber(value: number): string {
 
 function loadAppState(): AppState {
   try {
+    const sharedState = decodeShareState(new URLSearchParams(window.location.search).get(SHARE_PARAM));
+    if (sharedState) {
+      return normalizeAppState(sharedState);
+    }
+
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       return normalizeAppState(JSON.parse(saved) as Partial<AppState>);
@@ -1061,6 +1077,28 @@ function saveAppState(): void {
       })),
     }),
   );
+}
+
+async function shareCurrentView(): Promise<void> {
+  const shareUrl = buildShareUrl(appState);
+
+  try {
+    await navigator.clipboard.writeText(shareUrl);
+    shareStatus.textContent = "Share link copied.";
+  } catch {
+    shareStatus.textContent = shareUrl;
+  }
+}
+
+function clearShareParam(): void {
+  const url = new URL(window.location.href);
+
+  if (!url.searchParams.has(SHARE_PARAM)) {
+    return;
+  }
+
+  url.searchParams.delete(SHARE_PARAM);
+  window.history.replaceState(null, "", url.toString());
 }
 
 function getDefaultInput(): MortgageInput {
