@@ -317,7 +317,6 @@ app.innerHTML = `
   </form>
 
   <section class="results-panel" id="results" aria-live="polite"></section>
-  <section class="panel" id="comparison"></section>
   <section class="panel" id="chart-section">
     <div class="section-heading-row">
       <div>
@@ -334,6 +333,7 @@ app.innerHTML = `
       <canvas id="amortization-chart"></canvas>
     </div>
   </section>
+  <section class="panel" id="comparison"></section>
   <section class="panel" id="amortization"></section>
 `;
 
@@ -350,7 +350,12 @@ const rateStatus = getRequiredElement<HTMLElement>("#rate-status");
 form.addEventListener("input", handleFormChange);
 form.addEventListener("change", handleFormChange);
 document.addEventListener("click", (event) => {
-  const target = event.target as HTMLElement;
+  const target = (event.target as HTMLElement).closest<HTMLElement>("[data-action], [data-chart-mode]");
+
+  if (!target) {
+    return;
+  }
+
   const action = target.dataset.action;
   const scenarioId = target.dataset.scenarioId;
   const selectedChartMode = target.dataset.chartMode as ChartMode | undefined;
@@ -713,6 +718,18 @@ function renderScenarioTabs(): void {
 }
 
 function renderComparison(): void {
+  if (appState.scenarios.length < 2) {
+    comparison.innerHTML = `
+      <div class="section-heading-row">
+        <div>
+          <h2>Scenario comparison</h2>
+          <p class="helper chart-helper">Add another scenario to compare payment, payoff, and interest outcomes.</p>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
   const bestByRow = getBestScenarioIdsByRow();
 
   comparison.innerHTML = `
