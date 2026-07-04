@@ -10,6 +10,7 @@ import {
 } from "./charts";
 import { formatCurrency, formatMonthsAsYearsAndMonths, formatPercent, parseNumberInput } from "./format";
 import { getDefaultInterestRate, getStaticThirtyYearFixedRate } from "./rates";
+import { buildShareUrl, decodeSharedView, SHARE_PARAM } from "./share";
 import "./styles.css";
 import type { MortgageInput, ValidationError } from "./types";
 
@@ -37,8 +38,9 @@ const defaultInput: MortgageInput = {
 };
 
 let rateLookup = getStaticThirtyYearFixedRate();
-let state = loadInput();
-let chartMode: ChartMode = "balance";
+const initialSharedView = decodeSharedView(new URLSearchParams(window.location.search).get(SHARE_PARAM));
+let state = loadInput(initialSharedView?.input);
+let chartMode: ChartMode = initialSharedView?.chartMode ?? "balance";
 
 const app = document.querySelector<HTMLDivElement>("#app");
 
@@ -55,8 +57,10 @@ app.innerHTML = `
     </div>
     <div class="header-actions">
       <a class="secondary-button" href="https://codymorterud.com">Back to blog</a>
+      <button class="secondary-button" type="button" data-action="share">Share</button>
       <button class="secondary-button" type="button" data-action="reset">Reset</button>
     </div>
+    <p class="share-status" id="share-status" aria-live="polite"></p>
   </header>
 
   <form id="calculator-form" novalidate>
@@ -181,19 +185,32 @@ const chartEmpty = getRequiredElement<HTMLElement>("#chart-empty");
 const amortizationChart = getRequiredElement<HTMLCanvasElement>("#amortization-chart");
 const amortization = getRequiredElement<HTMLElement>("#amortization");
 const rateStatus = getRequiredElement<HTMLElement>("#rate-status");
+const shareStatus = getRequiredElement<HTMLElement>("#share-status");
 
 form.addEventListener("input", handleFormChange);
 form.addEventListener("change", handleFormChange);
 document.addEventListener("click", (event) => {
-  const target = event.target as HTMLElement;
+  const target = (event.target as HTMLElement).closest<HTMLElement>("[data-action], [data-chart-mode]");
+
+  if (!target) {
+    return;
+  }
+
   const action = target.dataset.action;
   const selectedChartMode = target.dataset.chartMode as ChartMode | undefined;
 
   if (action === "reset") {
     localStorage.removeItem(STORAGE_KEY);
+    clearShareParam();
     rateLookup = getStaticThirtyYearFixedRate();
     state = getDefaultInput();
+    chartMode = "balance";
+    shareStatus.textContent = "";
     render();
+  }
+
+  if (action === "share") {
+    void shareCurrentView();
   }
 
   if (selectedChartMode) {
@@ -510,21 +527,67 @@ function cleanNumber(value: number): string {
   return String(Math.round(value * 100) / 100);
 }
 
-function loadInput(): MortgageInput {
+function loadInput(sharedInput?: Partial<MortgageInput>): MortgageInput {
   try {
+    if (sharedInput) {
+      return normalizeInput(sharedInput);
+    }
+
     const saved = localStorage.getItem(STORAGE_KEY);
     if (!saved) {
       return getDefaultInput();
     }
 
-    return { ...getDefaultInput(), ...(JSON.parse(saved) as Partial<MortgageInput>) };
+    return normalizeInput(JSON.parse(saved) as Partial<MortgageInput>);
   } catch {
     return getDefaultInput();
   }
 }
 
+function normalizeInput(input: Partial<MortgageInput>): MortgageInput {
+  return { ...getDefaultInput(), ...input };
+}
+
 function saveInput(input: MortgageInput): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(input));
+}
+
+async function shareCurrentView(): Promise<void> {
+  const shareUrl = buildShareUrl({ input: state, chartMode });
+  const copied = await copyText(shareUrl);
+  shareStatus.textContent = copied ? "Share link copied." : shareUrl;
+}
+
+async function copyText(value: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(value);
+    return true;
+  } catch {
+    const textArea = document.createElement("textarea");
+    textArea.value = value;
+    textArea.setAttribute("readonly", "true");
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    document.body.append(textArea);
+    textArea.select();
+
+    try {
+      return document.execCommand("copy");
+    } finally {
+      textArea.remove();
+    }
+  }
+}
+
+function clearShareParam(): void {
+  const url = new URL(window.location.href);
+
+  if (!url.searchParams.has(SHARE_PARAM)) {
+    return;
+  }
+
+  url.searchParams.delete(SHARE_PARAM);
+  window.history.replaceState(null, "", url.toString());
 }
 
 function getDefaultInput(): MortgageInput {
