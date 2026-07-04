@@ -1,3 +1,4 @@
+# https://codymorterud.com/mortgage-calculator/
 # Mortgage Calculator
 
 A static Vite + vanilla TypeScript mortgage calculator for estimating monthly housing cost, payoff time, and interest savings from recurring extra principal payments.
