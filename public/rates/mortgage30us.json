@@ -1,7 +1,7 @@
 {
   "source": "FRED MORTGAGE30US",
   "sourceUrl": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=MORTGAGE30US",
-  "date": "2026-09-24",
-  "rate": 7.03,
-  "fetchedAt": "2026-09-30T15:57:48.305833Z"
+  "date": "2026-10-01",
+  "rate": 7.28,
+  "fetchedAt": "2026-10-01T16:30:48.420142Z"
 }
